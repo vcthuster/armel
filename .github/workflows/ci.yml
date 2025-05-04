@@ -27,7 +27,7 @@ jobs:
       - name: Build and Test on macOS
         if: runner.os == 'macOS'
         run: |
-          clang -std=c23 -Iincludes -Isrc src/*.c tests/armel_test.c -o build/armel_tests
+          clang -std=c11 -Iincludes -Isrc src/*.c tests/armel_test.c -o build/armel_tests
           ./build/armel_tests
 
       - name: Build and Test on Ubuntu
