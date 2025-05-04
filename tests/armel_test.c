@@ -28,8 +28,8 @@ ARMEL_TEST(test_arl_static_alloc) {
 
 	assert(ptr1 != NULL);
 	assert(ptr2 != NULL);
-	assert((uintptr_t)ptr1 % 8 == 0);
-	assert((uintptr_t)ptr2 % 8 == 0);
+	assert((uintptr_t)ptr1 % ARL_ALIGN == 0);
+	assert((uintptr_t)ptr2 % ARL_ALIGN == 0);
 }
 
 
