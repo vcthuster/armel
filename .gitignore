@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# Build
+/bin
+*.o
+*.out
+*.a
+*.so
+*.exe
+
+# VSCode settings
+.vscode/
+
+# Binaries
+*.bin
+
+# Logs
+*.log
+
+# Lib tests / debug
+*.gcda
+*.gcno

@@ -1,0 +1,37 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [1.0.0] – 2025-05-03
+
+### Added
+- `arl_new()`, `arl_alloc()`, `arl_free()` for dynamic arenas
+- `arl_make()`, `arl_array()` helpers for typed allocation
+- Static arena support via `arl_new_static()` and `ARL_STATIC`
+- Alignment support with `ARL_DEFAULT_ALIGNMENT`
+- Optional flags: `ARL_ZEROS`, `ARL_SOFTFAIL`
+- Offset-based rewind: `arl_offset()`, `arl_rewind_to()`
+- Introspection: `arl_used()`, `arl_remaining()`, `arl_dump()`
+- Internal system layer (`arl_sys_alloc`, `arl_sys_free`) portable on macOS/Linux/Windows
+- Utility macros: `ARL_KB`, `ARL_MB`, `ARL_GB`, `arl_align_up`, `arl_size`
+
+### Changed
+- N/A
+
+### Removed
+- N/A
+
+---
+
+## [Unreleased]
+
+### Planned
+- Sub-arenas (stacked scopes)
+- Optional thread safety
+- Optional `.a` and `.so` build targets
+- Integration with build systems (CMake)
