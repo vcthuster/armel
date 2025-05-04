@@ -1,3 +1,5 @@
+#include <stdint.h>
+#include <stddef.h>
 #include <Armel/armel.h>
 
 void arl_new (Armel* armel, size_t size, size_t alignment, uint8_t flags) {
