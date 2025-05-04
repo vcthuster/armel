@@ -38,9 +38,11 @@ jobs:
           gcc -std=c11 -Iincludes -Isrc src/*.c tests/armel_test.c -o build/armel_tests
           ./build/armel_tests
 
-      - name: Build and Test on Windows
+      - name: Setup MinGW and build on Windows
         if: runner.os == 'Windows'
-        shell: cmd
+        shell: bash
         run: |
-          cl /nologo /std:c11 /Iincludes /Isrc src\*.c tests\armel_test.c /Fe:build\armel_tests.exe
-          build\armel_tests.exe
+          choco install mingw -y
+          export PATH="/c/ProgramData/chocolatey/bin:/c/tools/mingw64/bin:$PATH"
+          gcc -std=c11 -Iincludes -Isrc src/*.c tests/armel_test.c -o build/armel_tests.exe
+          ./build/armel_tests.exe
