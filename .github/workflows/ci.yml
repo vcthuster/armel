@@ -15,30 +15,28 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Create build directory
-      run: mkdir -p build
+      - name: Create build directory
+        run: mkdir -p build
 
-    - name: Install GCC on Ubuntu
-      if: runner.os == 'Linux'
-      run: sudo apt-get update && sudo apt-get install -y build-essential
+      - name: Build and Test on macOS
+        if: runner.os == 'macOS'
+        run: |
+          clang -std=c23 -Iincludes -Isrc src/*.c tests/armel_test.c -o build/armel_tests
+          ./build/armel_tests
 
-    - name: Build and test on macOS (Clang)
-      if: runner.os == 'macOS'
-      run: |
-        clang -std=c23 -Iincludes -Isrc src/*.c tests/armel_test.c -o build/armel_tests
-        ./build/armel_tests
+      - name: Build and Test on Ubuntu
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc
+          gcc -std=c11 -Iincludes -Isrc src/*.c tests/armel_test.c -o build/armel_tests
+          ./build/armel_tests
 
-    - name: Build and test on Ubuntu (GCC)
-      if: runner.os == 'Linux'
-      run: |
-        gcc -std=c11 -Iincludes -Isrc src/*.c tests/armel_test.c -o build/armel_tests
-        ./build/armel_tests
-
-    - name: Build and test on Windows (MSVC)
-      if: runner.os == 'Windows'
-      run: |
-        cl /nologo /std:c11 /Iincludes /Isrc src\*.c tests\armel_test.c /Fe:build\armel_tests.exe
-        build\armel_tests.exe
+      - name: Build and Test on Windows
+        if: runner.os == 'Windows'
+        run: |
+          cl /nologo /std:c11 /Iincludes /Isrc src\*.c tests\armel_test.c /Fe:build\armel_tests.exe
+          build\armel_tests.exe
