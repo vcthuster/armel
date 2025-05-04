@@ -21,7 +21,7 @@ ARMEL_TEST(test_arl_static_alloc) {
 	Armel armel;
 	void* buffer[1024];
 
-	arl_new_static(&armel, sizeof(buffer), 1024, 8, 0);
+	arl_new_static(&armel, buffer, sizeof(buffer), 8, 0);
 
 	void* ptr1 = arl_alloc(&armel, 12);
 	void* ptr2 = arl_alloc(&armel, 24);
