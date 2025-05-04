@@ -1,6 +1,6 @@
 # Armel – Fast linear memory allocator for C
 
-`Armel` is a tiny, fast and portable armel (bump-pointer) memory allocator for C.  
+**Armel** is a tiny, fast and portable armel (bump-pointer) memory allocator for C.  
 It provides a simple and predictable alternative to `malloc/free`, optimized for performance-critical code, temporary allocations, and embedded use cases.
 
 ---
