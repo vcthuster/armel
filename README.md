@@ -13,7 +13,7 @@ It provides a simple and predictable alternative to `malloc/free`, optimized for
 ## ✨ Features
 
 - ⚡ Ultra-fast linear allocations (zero overhead)
-- 📦 Release-all-at-once with `reset` or `rewind`
+- 📦 Release-all-at-once with `reset` or `rewind_to`
 - 🎯 Alignment-aware and platform-tuned
 - 🧱 Static or dynamic allocation (mmap/VirtualAlloc or user-provided buffer)
 - 🔄 Optional zero-fill or soft-fail behavior
@@ -45,7 +45,7 @@ arl_reset(&armel);  // reuse all memory
 arl_free(&armel);   // release memory (unless static)
 ```
 
-Need a static armel with no system calls?
+Need a static arena with no system calls?
 
 ```c
 ARL_STATIC(temp, 4096);
