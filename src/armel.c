@@ -12,7 +12,7 @@ void arl_new (Armel* armel, size_t size, size_t alignment, uint8_t flags) {
     armel->cursor = ptr;
     armel->end = (char*)ptr + padded_size;
 	armel->alignment = alignment;
-	armel->mask = ~(alignment - 1);
+	armel->mask = alignment - 1;
 	armel->flags = flags;
 
 	if (flags & ARL_ZEROS) {
@@ -56,7 +56,7 @@ void* arl_alloc (Armel *armel, size_t size) {
 	// Align the cursor only if needed
 	uintptr_t start = (cursor % armel->alignment == 0)
 		? cursor
-		: (cursor + armel->alignment - 1) & armel->mask;
+		: (cursor + armel->mask) & ~armel->mask;
 
 	uintptr_t stop = start + size;
 	uintptr_t end  = (uintptr_t)armel->end;

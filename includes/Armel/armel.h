@@ -201,6 +201,24 @@
      (fprintf(stderr, "Fatal Armel error: %s\n", msg), abort(), (void)0))
 
 /**
+ * @def ARL_ALIGNAS(x)
+ * @brief Platform-independent macro to enforce alignment of variables or structures.
+ * Ensures that a variable or structure is aligned to `x` bytes.
+ *
+ * Example :
+ * ARL_ALIGNAS(16) static uint8_t buffer[1024];
+ * Armel armel;
+ * arl_new_static(&armel, buffer, sizeof(buffer), 16, 0);
+ */
+#if defined(_MSC_VER)
+    #define ARL_ALIGNAS(x) __declspec(align(x))
+#elif defined(__GNUC__) || defined(__clang__)
+    #define ARL_ALIGNAS(x) __attribute__((aligned(x)))
+#else
+    #define ARL_ALIGNAS(x) /* fallback: no alignment */
+#endif
+    
+/**
  * @struct Armel
  * @brief A linear (bump) memory allocator.
  *
@@ -254,7 +272,7 @@ static inline void arl_new_static(Armel *armel, void *buffer, size_t size, size_
 }
 
 /**
- * @brief Declares and initializes a static arena using a local buffer.
+ * @brief Declares and initializes a static arena using an aligned local buffer.
  *
  * This macro creates both a static buffer and a static Arena instance,
  * and calls `arl_new_static()` to initialize it.
@@ -269,10 +287,10 @@ static inline void arl_new_static(Armel *armel, void *buffer, size_t size, size_
  *     ARL_STATIC(temp_arena, 4096);
  *     int* values = arl_array(&temp_arena, int, 128);
  */
-#define ARL_STATIC(name, size) 				     		\
-	static uint8_t name##_buffer[size]; 				\
-	static Armel name; 									\
-	arl_new_static(&name, name##_buffer, size, 8, 0)
+#define ARL_STATIC(name, size) 				     		                    \
+    ARL_ALIGNAS(ARL_ALIGN) static uint8_t name##_buffer[size]; 				\
+	static Armel name; 									                    \
+	arl_new_static(&name, name##_buffer, size, ARL_ALIGN, ARL_NOFLAG)
 
 /**
  * @brief Rounds a size up to the next multiple of the given alignment.

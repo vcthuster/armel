@@ -18,16 +18,17 @@ typedef void (*fn) (void);
 
 
 ARMEL_TEST(test_arl_static_alloc) {
-	Armel armel;
-	void* buffer[1024];
+	Armel a;
+	ARL_ALIGNAS(ARL_ALIGN) void* buffer[1024];
 
-	arl_new_static(&armel, buffer, sizeof(buffer), 8, 0);
+	arl_new_static(&a, buffer, 1024, ARL_ALIGN, 0);
 
-	void* ptr1 = arl_alloc(&armel, 12);
-	void* ptr2 = arl_alloc(&armel, 24);
+	void* ptr1 = arl_alloc(&a, 12);
+	void* ptr2 = arl_alloc(&a, 24);
 
 	assert(ptr1 != NULL);
 	assert(ptr2 != NULL);
+	assert((uintptr_t)ptr1 % ARL_ALIGN == 0);
 	assert((uintptr_t)ptr2 % ARL_ALIGN == 0);
 }
 
@@ -79,7 +80,7 @@ ARMEL_TEST(test_arl_cursor) {
 	assert((uintptr_t)a % armel.alignment == 0);
 	assert((uintptr_t)b % armel.alignment == 0);
 
-	uintptr_t expected_b = ((uintptr_t)a + sizeof(int) + armel.alignment - 1) & armel.mask;
+	uintptr_t expected_b = ((uintptr_t)a + sizeof(int) + armel.alignment - 1) & ~armel.mask;
 	assert((uintptr_t)b == expected_b);
 
 	arl_free(&armel);

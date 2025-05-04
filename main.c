@@ -5,10 +5,15 @@
 
 int main() {
 
-	Armel armel;
+	ARL_STATIC(armel, ARL_KB);
 
-	arl_new(&armel, 1024, 8, 0);
+	int *i = arl_make(&armel, int);
 
-	arl_free(&armel);
+	arl_print_info(&armel);
+
+	printf("%zu \n", (uintptr_t)armel.base % ARL_ALIGN);
+	printf("%zu \n", (uintptr_t)armel.cursor % ARL_ALIGN);
+	printf("%zu \n", (uintptr_t)i % ARL_ALIGN);
+
 	return 0;
 }
