@@ -1,4 +1,7 @@
 ![CI](https://github.com/vcthuster/armel/actions/workflows/ci.yml/badge.svg)
+![Version](https://img.shields.io/badge/version-v1.0.0-yellow)
+![Platform Support](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-blue)
+![License: zlib](https://img.shields.io/badge/license-zlib-lightgrey)
 
 # Armel – Fast linear memory allocator for C
 

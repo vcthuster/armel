@@ -24,7 +24,7 @@ jobs:
     - name: Build and test on Linux/macOS
       if: runner.os != 'Windows'
       run: |
-        clang -std=c23 -Iincludes -Isrc src/*.c tests/armel_test.c -o build/armel_tests
+        clang -std=c99 -Iincludes -Isrc src/*.c tests/armel_test.c -o build/armel_tests
         ./build/armel_tests
 
     - name: Build and test on Windows
