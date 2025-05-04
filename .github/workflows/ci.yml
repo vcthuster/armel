@@ -1,0 +1,34 @@
+name: Build and Test (Cross-Platform)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    name: Build and Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Create build directory
+      run: mkdir build
+
+    - name: Build and test on Linux/macOS
+      if: runner.os != 'Windows'
+      run: |
+        clang -std=c23 -Iincludes -Isrc src/*.c tests/armel_test.c -o build/armel_tests
+        ./build/armel_tests
+
+    - name: Build and test on Windows
+      if: runner.os == 'Windows'
+      run: |
+        cl /nologo /std:c11 /Iincludes /Isrc src\*.c tests\armel_test.c /Fe:build\armel_tests.exe
+        build\armel_tests.exe

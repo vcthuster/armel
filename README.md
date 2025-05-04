@@ -1,3 +1,5 @@
+![CI](https://github.com/vcthuster/armel/actions/workflows/ci.yml/badge.svg)
+
 # Armel – Fast linear memory allocator for C
 
 **Armel** is a tiny, fast and portable armel (bump-pointer) memory allocator for C.  
