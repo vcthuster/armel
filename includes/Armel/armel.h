@@ -249,6 +249,7 @@ static inline void arl_new_static(Armel *armel, void *buffer, size_t size, size_
 	armel->cursor = buffer;
 	armel->end = (uint8_t*)buffer + size;
 	armel->alignment = alignment;
+    armel->mask = alignment - 1;
 	armel->flags = flags;
 }
 
