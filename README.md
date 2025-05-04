@@ -86,6 +86,7 @@ You can override it manually **before including `armel.h`** by defining the macr
 ```c
 #define ARL_ALIGN 32
 #include <Armel/armel.h>
+```
 
 The alignment must be a power of 2 (e.g. 8, 16, 32).
 
@@ -97,6 +98,7 @@ ARL_MB  // 1024 * 1024 bytes
 ARL_GB  // 1024 * 1024 * 1024 bytes
 
 arl_new(&armel, 8 * ARL_KB, ARL_ALIGN, ARL_NOFLAG);
+```
 
 ---
 
