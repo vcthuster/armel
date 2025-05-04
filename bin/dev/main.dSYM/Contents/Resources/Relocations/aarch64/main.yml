@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/vincent/Documents/Programmation/Codes/Arena/bin/dev/main'
+relocations:     []
+...

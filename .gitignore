@@ -1,23 +1,43 @@
+# Build outputs
+build/
+*.exe
+*.out
+*.obj
+*.o
+
 # macOS
 .DS_Store
 
-# Build
-/bin
-*.o
-*.out
-*.a
-*.so
-*.exe
-
-# VSCode settings
+# Visual Studio Code
 .vscode/
+*.code-workspace
 
-# Binaries
-*.bin
-
-# Logs
+# Logs and debugging
 *.log
+*.trace
 
-# Lib tests / debug
-*.gcda
+# Temporary test files
+dummy.txt
+temp.*
+*.tmp
+
+# Core dumps
+core
+core.*
+
+# System-specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# CMake / other build systems (future-proofing)
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Coverage and artifacts
 *.gcno
+*.gcda
+*.gcov
+coverage/
