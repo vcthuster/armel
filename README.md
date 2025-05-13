@@ -137,7 +137,6 @@ ARL_STATIC(name, size);
 This library includes internal unit tests.
 
 Benchmark : TODO
-```
 
 ---
 
