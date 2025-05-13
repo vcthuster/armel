@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] – 2025-05-13
+
+### Added
+- Full test coverage of the core allocator (arl_alloc, arl_make, arl_array, rewind/reset)
+- New tests: test_arl_state_consistency, test_arl_exact_fit, test_arl_zero_size, test_arl_repeated_reset, and more
+- New armel_bench.h benchmarking header for consistent microbenchmarking (includes outlier filtering)
+- Benchmark suite (in bench.c) comparing malloc/free to arl_alloc for bulk and per-element allocation
+- Static inline optimization of arl_alloc and arl_new
+- Cleaner default macro for static arenas (ARL_STATIC)
+- Robustness improvements: safe handling of size=0 allocations, consistent alignment checking
+- arl_print_info() utility for debugging current state
+
+### Changed
+- arl_alloc() logic streamlined (faster alignment and safety checks)
+- arl_new() now has a simplified default version with reasonable defaults; advanced options moved to arl_new_custom()
+
+### Removed
+- Unused alignment fallback checks inside arl_alloc
+
+---
+
 ## [1.0.0] – 2025-05-03
 
 ### Added

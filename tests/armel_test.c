@@ -36,7 +36,7 @@ ARMEL_TEST(test_arl_static_alloc) {
 ARMEL_TEST(test_arl_alloc_int) {
 	Armel armel;
 
-	arl_new(&armel, 32, 8, ARL_NOFLAG);
+	arl_new(&armel, 32);
 
 	int* i = arl_make(&armel, int);
 	int* j = arl_make(&armel, int);
@@ -54,7 +54,7 @@ ARMEL_TEST(test_arl_alloc_int) {
 
 ARMEL_TEST(test_arl_free) {
 	Armel armel;
-	arl_new(&armel, 8, 8, ARL_NOFLAG);
+	arl_new(&armel, 8);
 
 	int *i = arl_make(&armel, int);
 	*i = 12;
@@ -72,7 +72,7 @@ ARMEL_TEST(test_arl_free) {
 ARMEL_TEST(test_arl_cursor) {
 	Armel armel;
 	size_t size = arl_size(int, 2, ARL_ALIGN);
-	arl_new(&armel, size, ARL_ALIGN, ARL_NOFLAG);
+	arl_new(&armel, size);
 
 	int* a = arl_make(&armel, int);
 	int* b = arl_make(&armel, int);
@@ -86,15 +86,27 @@ ARMEL_TEST(test_arl_cursor) {
 	arl_free(&armel);
 }
 
+ARMEL_TEST(test_arl_zero_size) {
+    Armel arena;
+    arl_new(&arena, 64);
+
+    void *ptr = arl_alloc(&arena, 0);
+
+    assert(ptr != NULL); // Peut valoir base, mais ne doit jamais planter
+    assert((uintptr_t)ptr % arena.alignment == 0);
+
+    arl_free(&arena);
+}
+
 ARMEL_TEST(test_arl_alloc_array) {
 	Armel armel;
 
-	arl_new(&armel, 32, 8, ARL_ZEROS);
+	arl_new(&armel, 32);
 
 	int* arr = arl_array(&armel, int, 4);
 
 	for (int i = 0; i < 4; i++) {
-		assert(arr[i] == 0); // AVANT affectation, si tu veux tester ARENA_ZEROS
+		assert(arr[i] == 0);
 	}
 
 	for (int i = 0; i < 4; i++) {
@@ -110,7 +122,7 @@ ARMEL_TEST(test_arl_alloc_array) {
 
 ARMEL_TEST(test_arl_used) {
 	Armel armel;
-	arl_new(&armel, 64, ARL_ALIGN, ARL_NOFLAG);
+	arl_new(&armel, 64);
 
 	uintptr_t before = (uintptr_t)armel.cursor;
 
@@ -131,7 +143,7 @@ ARMEL_TEST(test_arl_remaining) {
 	Armel armel;
 	size_t total_size = arl_size(int, 3, ARL_ALIGN);
 
-	arl_new(&armel, total_size, ARL_ALIGN, ARL_NOFLAG);
+	arl_new(&armel, total_size);
 
 	int *i = arl_make(&armel, int);
 	*i = 10;
@@ -147,9 +159,43 @@ ARMEL_TEST(test_arl_remaining) {
 	arl_free(&armel);
 }
 
+ARMEL_TEST(test_arl_state_consistency) {
+    Armel arena;
+    size_t total_size = 128;
+    arl_new(&arena, total_size);
+
+    (void)arl_make(&arena, int);
+    (void)arl_array(&arena, double, 3);
+
+    size_t used = arl_used(&arena);
+    size_t remaining = arl_remaining(&arena);
+    size_t combined = used + remaining;
+
+    assert(combined <= total_size); // Toujours vrai
+    assert(combined + ARL_ALIGN >= total_size); // marge d'alignement acceptable
+
+    arl_free(&arena);
+}
+
+ARMEL_TEST(test_arl_exact_fit) {
+    Armel arena;
+    arl_new(&arena, 64);
+
+    size_t avail = arl_remaining(&arena);
+
+    void *ptr = arl_alloc(&arena, avail);
+    assert(ptr != NULL);
+
+    arena.flags = ARL_SOFTFAIL;
+    void *fail = arl_alloc(&arena, 1);
+    assert(fail == NULL);
+
+    arl_free(&arena);
+}
+
 ARMEL_TEST(test_arl_offset_rewind) {
 	Armel armel;
-	arl_new(&armel, arl_size(int, 4, ARL_ALIGN), ARL_ALIGN, ARL_NOFLAG);
+	arl_new(&armel, arl_size(int, 4, ARL_ALIGN));
 
 	int* a = arl_make(&armel, int);
 	*a = 42;
@@ -174,7 +220,7 @@ ARMEL_TEST(test_arl_offset_rewind) {
 
 ARMEL_TEST(test_arl_reset) {
 	Armel armel;
-	arl_new(&armel, 64, ARL_ALIGN, ARL_NOFLAG);
+	arl_new(&armel, 64);
 
 	int* a = arl_make(&armel, int);
 	*a = 42;
@@ -194,10 +240,30 @@ ARMEL_TEST(test_arl_reset) {
 	arl_free(&armel);
 }
 
+ARMEL_TEST(test_arl_repeated_reset) {
+    Armel arena;
+    arl_new(&arena, 128);
+
+    int* a = arl_make(&arena, int);
+    *a = 42;
+    uintptr_t addr_a = (uintptr_t)a;
+
+    for (int i = 0; i < 5; i++) {
+        arl_reset(&arena);
+        int* b = arl_make(&arena, int);
+        *b = i;
+
+        assert((uintptr_t)b == addr_a);
+        assert(*b == i);
+    }
+
+    arl_free(&arena);
+}
+
 // Test: alignment is respected
 ARMEL_TEST (test_arl_alignment) {
     Armel arena;
-    arl_new(&arena, 64, 16, ARL_NOFLAG);
+    arl_new(&arena, 64);
 
     void *ptr = arl_alloc(&arena, sizeof(double));
     assert(((uintptr_t)ptr % 16) == 0);
@@ -205,10 +271,23 @@ ARMEL_TEST (test_arl_alignment) {
     arl_free(&arena);
 }
 
+ARMEL_TEST(test_arl_alloc_align_boundary) {
+    Armel arena;
+    arl_new(&arena, ARL_KB);
+
+    for (size_t sz = 1; sz <= 32; sz++) {
+        void* ptr = arl_alloc(&arena, sz);
+        assert(ptr != NULL);
+        assert(((uintptr_t)ptr % arena.alignment) == 0);
+    }
+
+    arl_free(&arena);
+}
+
 // Test: rewind and reallocation
 ARMEL_TEST (test_arl_rewind_and_reuse) {
     Armel arena;
-    arl_new(&arena, 128, ARL_ALIGN, ARL_NOFLAG);
+    arl_new(&arena, 128);
 
     uintptr_t mark = arl_offset(&arena);
     int *temp = arl_array(&arena, int, 10);
@@ -226,7 +305,7 @@ ARMEL_TEST (test_arl_rewind_and_reuse) {
 // Test: ARL_SOFTFAIL returns NULL instead of crashing
 ARMEL_TEST (test_arl_softfail) {
     Armel arena;
-    arl_new(&arena, 16, ARL_ALIGN, ARL_SOFTFAIL);
+    arl_new_custom(&arena, 16, ARL_ALIGN, ARL_SOFTFAIL);
 
     void *p1 = arl_alloc(&arena, 16);
     void *p2 = arl_alloc(&arena, 16);
@@ -240,7 +319,7 @@ ARMEL_TEST (test_arl_softfail) {
 // Test: ARL_ZEROS fills memory with zero
 ARMEL_TEST (test_arl_zeros) {
     Armel arena;
-    arl_new(&arena, 64, ARL_ALIGN, ARL_ZEROS);
+    arl_new_custom(&arena, 64, ARL_ALIGN, ARL_ZEROS);
 
     int *arr = arl_array(&arena, int, 4);
     for (int i = 0; i < 4; i++) {
@@ -252,7 +331,7 @@ ARMEL_TEST (test_arl_zeros) {
 
 ARMEL_TEST(test_arl_print_info) {
     Armel arena;
-    arl_new(&arena, 64, ARL_ALIGN, ARL_NOFLAG);
+    arl_new(&arena, 64);
 
     (void)arl_make(&arena, int);
     (void)arl_array(&arena, int, 3);
@@ -287,12 +366,17 @@ int main (void) {
 	RUN_TEST(test_arl_alloc_int);
 	RUN_TEST(test_arl_free);
 	RUN_TEST(test_arl_cursor);
+	RUN_TEST(test_arl_zero_size);
 	RUN_TEST(test_arl_alloc_array);
 	RUN_TEST(test_arl_used);
 	RUN_TEST(test_arl_remaining);
+	RUN_TEST(test_arl_state_consistency);
+	RUN_TEST(test_arl_exact_fit);
 	RUN_TEST(test_arl_offset_rewind);
 	RUN_TEST(test_arl_reset);
+	RUN_TEST(test_arl_repeated_reset);
 	RUN_TEST(test_arl_alignment);
+	RUN_TEST(test_arl_alloc_align_boundary);
 	RUN_TEST(test_arl_rewind_and_reuse);
 	RUN_TEST(test_arl_softfail);
 	RUN_TEST(test_arl_zeros);

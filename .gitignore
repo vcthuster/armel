@@ -12,6 +12,7 @@ build/
 # Visual Studio Code
 .vscode/
 *.code-workspace
+TODO.md
 
 # Logs and debugging
 *.log

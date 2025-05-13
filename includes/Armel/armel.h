@@ -289,7 +289,7 @@ static inline void arl_new_static(Armel *armel, void *buffer, size_t size, size_
  */
 #define ARL_STATIC(name, size) 				     		                    \
     ARL_ALIGNAS(ARL_ALIGN) static uint8_t name##_buffer[size]; 				\
-	static Armel name; 									                    \
+	Armel name; 									                    \
 	arl_new_static(&name, name##_buffer, size, ARL_ALIGN, ARL_NOFLAG)
 
 /**
@@ -340,7 +340,24 @@ void arl_sys_free (void *ptr, size_t size);
  * @param size Capacity of the Arena in bytes
  * @param alignment The alignment to be applied, must be a power of 2
  */
-void arl_new (Armel* armel, size_t size, size_t alignment, uint8_t flags);
+void arl_new_custom (Armel* armel, size_t size, size_t alignment, uint8_t flags);
+
+/**
+ * @brief Create a new Arena with size bytes capacity.
+ * @param armel Pointer to an arena to initialise
+ * @param size Capacity of the Arena in bytes
+ */
+static inline void arl_new (Armel* armel, size_t size) {
+	size_t padded_size = arl_align_up(size, ARL_ALIGN);
+    void* ptr = arl_sys_alloc(padded_size);
+
+    armel->base = ptr;
+    armel->cursor = ptr;
+    armel->end = (char*)ptr + padded_size;
+	armel->alignment = ARL_ALIGN;
+	armel->mask = ARL_ALIGN - 1;
+	armel->flags = ARL_NOFLAG;
+}
 
 /**
  * @brief Releases the memory used by the arena.
@@ -373,7 +390,9 @@ void arl_free (Armel *armel);
  * Example:
  *     arl_reset(&armel);
  */
-void arl_reset (Armel *armel);
+static inline void arl_reset (Armel *armel) {
+    armel->cursor = armel->base;
+}
 
 /**
  * @brief Request an allocation of size bytes in the arena armel, 
@@ -383,7 +402,30 @@ void arl_reset (Armel *armel);
  * @param size Size in bytes of the allocation request
  * @return A pointer to the allocated memory
  */
-void* arl_alloc (Armel *armel, size_t size);
+static inline void* arl_alloc (Armel *armel, size_t size) {
+	uintptr_t cursor    = (uintptr_t)armel->cursor;
+	uintptr_t start     = (cursor + armel->mask) & ~armel->mask;
+	uintptr_t stop      = start + size;
+	const uintptr_t end = (uintptr_t)armel->end;
+	void* ptr = (void*)start;
+
+	if (stop > end) {
+		if (armel->flags & ARL_SOFTFAIL) {
+			return NULL;
+		}
+
+		fprintf(stderr, "Armel arena error: out of memory. requesting %zu, remaining %zu\n", 
+			size, (uintptr_t)armel->end - start);
+		abort();
+	}
+
+	if (armel->flags & ARL_ZEROS) {
+		memset(ptr, 0, size);
+	}
+
+	armel->cursor = (void*)stop;
+    return ptr;
+}
 
 /**
  * @brief Allocates zero-initialized memory from the arena.

@@ -36,7 +36,10 @@ No dependencies. No setup. Drop-in ready.
 #include <Armel/armel.h>
 
 Armel armel;
-arl_new(&armel, 64 * ARL_KB, ARL_ALIGN, ARL_NOFLAG);
+arl_new(&armel, 64 * ARL_KB);
+// or : 
+// arl_new_custom(&armel, 64 * ARL_KB, ARL_ALIGN, ARL_NOFLAG);
+// for customization
 
 int* a = arl_make(&armel, int);
 *a = 42;
@@ -97,7 +100,7 @@ ARL_KB  // 1024 bytes
 ARL_MB  // 1024 * 1024 bytes
 ARL_GB  // 1024 * 1024 * 1024 bytes
 
-arl_new(&armel, 8 * ARL_KB, ARL_ALIGN, ARL_NOFLAG);
+arl_new(&armel, 8 * ARL_KB);
 ```
 
 ---
@@ -105,7 +108,8 @@ arl_new(&armel, 8 * ARL_KB, ARL_ALIGN, ARL_NOFLAG);
 ## 📤 API Overview
 
 ```c
-void arl_new(Armel*, size_t size, size_t alignment, uint8_t flags);
+void arl_new(Armel*, size_t size);
+void arl_new_custom(Armel*, size_t size, size_t alignment, uint8_t flags);
 void arl_free(Armel*);
 void arl_reset(Armel*);
 
@@ -122,22 +126,17 @@ void arl_print_info(Armel*);
 For static use:
 ```c
 void arl_new_static(Armel*, void* buffer, size_t size, size_t alignment, uint8_t flags);
-#define ARL_STATIC(name, size)
+// or just :
+ARL_STATIC(name, size);
 ```
 
 ---
 
 ## 🧪 Tests and Benchmarks
 
-This library includes internal unit tests and a benchmark against `malloc/free`.
+This library includes internal unit tests.
 
-```bash
-# example benchmark output
-=== Benchmark (N = 10000000) ===
-malloc/free:    0.000000 s
-armel_alloc:    0.009111 s
-malloc individual: 0.127543 s
-armel individual:  0.023865 s
+Benchmark : TODO
 ```
 
 ---

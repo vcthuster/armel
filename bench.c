@@ -1,80 +1,53 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
 #include <Armel/armel.h>
+#include <Armel/armel_bench.h>
 
 #define N 10000000
 
-double now() {
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ts.tv_sec + ts.tv_nsec / 1e9;
-}
+uint64_t bench_malloc_array() {
+    volatile int sink = 0;
 
-double benchmark_malloc_array() {
-    double start = now();
+    uint64_t start = arl_now_ns();
 
-    int* arr = malloc(N * sizeof(int));
     for (size_t i = 0; i < N; i++) {
-        arr[i] = (int)i;
+        int* arr = malloc(sizeof(int) * 200);
+        for (size_t j = 0; j < 200; j++) {
+            arr[j] = (int)j;
+            sink += arr[0];  // empêche la suppression complète de la boucle
+        }
+        free(arr);
     }
-    free(arr);
 
-    return now() - start;
+    uint64_t end = arl_now_ns();
+    return (end - start) / N;
 }
 
-double benchmark_arl_array() {
+uint64_t bench_arl_array() {
+    volatile int sink = 0;
+
+    uint64_t start = arl_now_ns();
+
     Armel armel;
-    size_t size = arl_size(int, N, ARL_ALIGN);
-    arl_new(&armel, size, ARL_ALIGN, ARL_NOFLAG);
+    arl_new(&armel, ARL_MB);
 
-    double start = now();
-
-    int* arr = arl_array(&armel, int, N);
     for (size_t i = 0; i < N; i++) {
-        arr[i] = (int)i;
+        int* arr = arl_array(&armel, int, 200);
+        for (size_t j = 0; j < 200; j++) {
+            arr[j] = (int)j;
+            sink += arr[0];  // empêche la suppression complète de la boucle
+        }
+        arl_reset(&armel);
     }
 
     arl_free(&armel);
-    return now() - start;
-}
-
-double benchmark_malloc_many() {
-    double start = now();
-    int** ptrs = malloc(sizeof(int*) * N);
-    for (size_t i = 0; i < N; i++) {
-        ptrs[i] = malloc(sizeof(int));
-        *ptrs[i] = (int)i;
-    }
-    for (size_t i = 0; i < N; i++) {
-        free(ptrs[i]);
-    }
-    free(ptrs);
-    return now() - start;
-}
-
-double benchmark_arl_many() {
-    Armel armel;
-    size_t size = arl_size(int, N, ARL_ALIGN);
-    arl_new(&armel, size, ARL_ALIGN, ARL_NOFLAG);
-
-    double start = now();
-    for (size_t i = 0; i < N; i++) {
-        int* p = arl_make(&armel, int);
-        *p = (int)i;
-    }
-    arl_free(&armel);
-    return now() - start;
+    uint64_t end = arl_now_ns();
+    return (end - start) / N;
 }
 
 int main() {
     printf("=== Benchmark (N = %d) ===\n", N);
-    printf("malloc/free:    %.6f s\n", benchmark_malloc_array());
-    printf("arl_alloc:    %.6f s\n", benchmark_arl_array());
-	printf("malloc individual: %.6f s\n", benchmark_malloc_many());
-	printf("armel individual:  %.6f s\n", benchmark_arl_many());
-    //printf("Speedup:        x%.2f\n", t_malloc / t_armel);
+
+    arl_bench_avg("malloc array", bench_malloc_array);
+    arl_bench_avg("arl_array", bench_arl_array);
 
     return 0;
 }
