@@ -4,8 +4,15 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <signal.h>
-#include <sys/wait.h>
-#include <unistd.h>
+
+#ifdef _WIN32
+    #define SKIP_EXPECT_ABORT 1
+#else
+    #define SKIP_EXPECT_ABORT 0
+    #include <sys/wait.h>
+    #include <unistd.h>
+#endif
+
 #include <Armel/armel.h>
 
 typedef void (*fn) (void);
@@ -31,6 +38,10 @@ typedef void (*fn) (void);
  * @return 0 if SIGABRT was correctly raised, 1 otherwise.
  */
 static inline int expect_abort(void (*fn)(void), const char* label) {
+#if SKIP_EXPECT_ABORT
+    printf("\n\t⚠️  Skipping %s (expect_abort not supported on Windows for now)\n", label);
+    return 0;
+#else
 	pid_t pid = fork();
 
 	if (pid == -1) {
@@ -52,4 +63,5 @@ static inline int expect_abort(void (*fn)(void), const char* label) {
 		fprintf(stderr, "\n\t❌ %s: expected abort (SIGABRT), but got exit code %d\n", label, status);
 		return 1;
 	}
+#endif
 }
