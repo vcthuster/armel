@@ -114,7 +114,7 @@
  * @brief Computes the total size needed to allocate N items of type T with alignment.
  *
  * This macro is useful to calculate the buffer size required before creating an arena,
- * especially when using arl_static or preallocating memory manually.
+ * especially when using arl_local or preallocating memory manually.
  *
  * @param T     Type of the element
  * @param N     Number of elements to allocate
@@ -259,9 +259,19 @@ typedef struct {
  * Example:
  *     uint8_t buffer[1024];
  *     Armel armel;
- *     arl_new_static(&armel, buffer, sizeof(buffer), 8, ARL_NOFLAG);
+ *     arl_new_local(&armel, buffer, sizeof(buffer), 8, ARL_NOFLAG);
+ * 
+ * @note The alignment must be a power of 2 (e.g. 8, 16, 32). If not, the program will abort.
+ * @note Do not attempt to use `arl_free()` on a local arena.
+ *       Use `arl_reset()` if you need to reuse it.
  */
-static inline void arl_new_static(Armel *armel, void *buffer, size_t size, size_t alignment, uint8_t flags) {
+static inline void arl_new_local (Armel *armel, void *buffer, size_t size, size_t alignment, uint8_t flags) {
+	ARL_ASSERT_FATAL(buffer != NULL, "arl_new_local: buffer is NULL");
+
+	if (alignment == 0 || (alignment & (alignment - 1)) != 0) {
+		ARL_FATAL("arl_new_local: alignment must be a non-zero power of 2");
+	}
+
 	armel->base = buffer;
 	armel->cursor = buffer;
 	armel->end = (uint8_t*)buffer + size;
@@ -271,25 +281,20 @@ static inline void arl_new_static(Armel *armel, void *buffer, size_t size, size_
 }
 
 /**
- * @brief Declares and initializes a static arena using an aligned local buffer.
+ * @brief Declares and initializes a local arena with a statically-sized aligned buffer.
  *
- * This macro creates both a static buffer and a static Arena instance,
- * and calls `arl_new_static()` to initialize it.
- *
- * Useful for quick, stack-free, zero-allocation arenas with fixed capacity.
- * The alignment is set to `ARL_ALIGN`, and flags are set to `ARL_NOFLAG`.
- *
- * @param name Name of the arena (used as variable name and to prefix the buffer)
- * @param size Size in bytes of the arena buffer
+ * Useful for temporary, zero-cost memory arenas with no malloc, on stack or in function scope.
  *
  * Example:
- *     ARL_STATIC(temp_arena, 4096);
- *     int* values = arl_array(&temp_arena, int, 128);
+ *     ARL_LOCAL(tmp, 4096);
+ *     char* text = arl_array(&tmp, char, 256);
+ * 
+ * @note Do not call `arl_free()` on this arena.
  */
-#define ARL_STATIC(name, size) 				     		                    \
-    ARL_ALIGNAS(ARL_ALIGN) uint8_t name##_buffer[size]; 				\
-	Armel name; 									                    \
-	arl_new_static(&name, name##_buffer, size, ARL_ALIGN, ARL_NOFLAG)
+#define ARL_LOCAL(name, size) 				     		            \
+    ARL_ALIGNAS(ARL_ALIGN) uint8_t name##_buffer[size]; 			\
+	Armel name; 									                \
+	arl_new_local(&name, name##_buffer, size, ARL_ALIGN, ARL_NOFLAG)
 
 /**
  * @brief Rounds a size up to the next multiple of the given alignment.

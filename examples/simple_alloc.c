@@ -3,7 +3,7 @@
 
 int main (void) {
     Armel arena;
-    arl_new(&arena, 4 * ARL_KB, ARL_DEFAULT_ALIGNMENT, ARL_NOFLAG);
+    arl_new(&arena, 4 * ARL_KB);
 
     int* a = arl_make(&arena, int);
     int* b = arl_make(&arena, int);

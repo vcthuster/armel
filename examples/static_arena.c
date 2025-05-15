@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 int main (void) {
-    ARL_STATIC(temp, 1024);
+    ARL_LOCAL(temp, 1024);
 
     float* values = arl_array(&temp, float, 16);
     for (int i = 0; i < 16; ++i)

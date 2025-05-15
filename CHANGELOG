@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] – 2025-05-15
+
+### Added
+- 🧪 expect_abort() utility for testing abort() behavior in a forked subprocess (POSIX only)
+- ✅ Tests covering ARL_CHECK and ARL_FATAL crash paths via expect_abort
+- 🪟 Graceful fallback for expect_abort on Windows (tests skipped with message)
+- 📂 make coverage target using llvm-profdata + llvm-cov with HTML report in tests/coverage-html/
+- 📊 Coverage report integration in the README with full summary table
+- 📋 Markdown coverage table showing function, line, branch and region coverage
+- 📄 @note Doxygen warning for arl_free() misuse on local arenas
+- 💡 New function: arl_new_local() — replaces arl_new_static(), safer and better named
+- 💡 New macro: ARL_LOCAL(name, size) — replaces ARL_STATIC, now more intuitive
+- 🔒 Alignment verification added to arl_new_local() (must be power of 2)
+- 🧪 Test: test_arl_new_local_bad_alignment_abort for invalid alignments
+- 🧪 Test: test_arl_new_local_valid for normal local usage
+
+### Changed
+- ♻️ Renamed arl_new_static() → arl_new_local() (more accurate semantics)
+- ♻️ Renamed ARL_STATIC → ARL_LOCAL for clarity and correctness
+- 🧪 expect_abort() test logic moved to armel_test.h for reuse and CI support
+- ✅ make tests now compiles a test runner using tests/armel_test.c and runs all test cases
+- ✅ make coverage uses LLVM_PROFILE_FILE=... to support GitHub Actions and avoid default.profraw errors
+- 🧪 Output of test runner made consistent and readable (PASSED ✅, skipped, etc.)
+
+### Removed
+- ❌ Old-style static arena macro and function aliases (e.g. ARL_STATIC in tests — replaced by ARL_LOCAL)
+- ❌ Raw call to fork() in test files — now wrapped via expect_abort()
+
+---
+
 ## [1.1.0] – 2025-05-13
 
 ### Added
@@ -15,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New armel_bench.h benchmarking header for consistent microbenchmarking (includes outlier filtering)
 - Benchmark suite (in bench.c) comparing malloc/free to arl_alloc for bulk and per-element allocation
 - Static inline optimization of arl_alloc and arl_new
-- Cleaner default macro for static arenas (ARL_STATIC)
+- Cleaner default macro for local arenas (ARL_LOCAL)
 - Robustness improvements: safe handling of size=0 allocations, consistent alignment checking
 - arl_print_info() utility for debugging current state
 

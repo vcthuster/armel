@@ -48,10 +48,10 @@ arl_reset(&armel);  // reuse all memory
 arl_free(&armel);   // release memory (unless static)
 ```
 
-Need a static arena with no system calls?
+Need a local arena with no system calls?
 
 ```c
-ARL_STATIC(temp, 4096);
+ARL_LOCAL(temp, 4096);
 char* data = arl_array(&temp, char, 128);
 ```
 
@@ -125,9 +125,9 @@ void arl_print_info(Armel*);
 
 For static use:
 ```c
-void arl_new_static(Armel*, void* buffer, size_t size, size_t alignment, uint8_t flags);
+void arl_new_local(Armel*, void* buffer, size_t size, size_t alignment, uint8_t flags);
 // or just :
-ARL_STATIC(name, size);
+ARL_LOCAL(name, size);
 ```
 
 ---
@@ -157,12 +157,12 @@ Here is the current coverage summary:
 
 | Filename                      | Function Coverage     | Line Coverage         | Region Coverage        | Branch Coverage         |
 |------------------------------|------------------------|------------------------|-------------------------|--------------------------|
-| includes/Armel/armel.h       | 100.00% (10/10)        | 79.01% (64/81)         | 76.79% (43/56)          | 68.75% (11/16)           |
-| includes/Armel/armel_test.h  | 100.00% (1/1)          | 55.56% (10/18)         | 77.78% (14/18)          | 50.00% (4/8)             |
+| includes/Armel/armel.h       | 100.00% (10/10)        | 75.86% (66/87)         | 68.92% (51/74)          | 60.87% (14/23)           |
+| includes/Armel/armel_test.h  | 100.00% (1/1)          | 57.89% (11/19)         | 77.78% (14/18)          | 50.00% (4/8)             |
 | src/armel.c                  | 100.00% (3/3)          | 80.49% (33/41)         | 53.33% (16/30)          | 38.46% (5/13)            |
 | src/armel_sys.c              | 100.00% (2/2)          | 100.00% (10/10)        | 71.43% (15/21)          | 50.00% (2/4)             |
-| tests/armel_test.c           | 87.50% (28/32)         | 94.08% (302/321)       | 58.30% (418/717)        | 62.26% (99/159)          |
-| **Totals**                   | **91.67% (44/48)**     | **88.96% (419/471)**   | **60.10% (506/842)**    | **60.50% (121/200)**     |
+| tests/armel_test.c           | 85.71% (30/35)         | 92.96% (317/341)       | 58.50% (437/747)        | 62.42% (103/165)         |
+| **Totals**                   | **90.20% (46/51)**     | **87.75% (437/498)**   | **59.89% (533/890)**    | **60.09% (128/213)**     |
 
 > 💡 Function and line coverage are near full on all core logic.
 > Branch and region coverage include deep safety checks, abort() handling, softfail paths, and alignment control logic.

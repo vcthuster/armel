@@ -3,7 +3,7 @@
 
 int main (void) {
     Armel arena;
-    arl_new(&arena, 8 * ARL_KB, ARL_DEFAULT_ALIGNMENT, ARL_NOFLAG);
+    arl_new(&arena, 8 * ARL_KB);
 
     uintptr_t mark = arl_offset(&arena);
 

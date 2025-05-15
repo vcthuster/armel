@@ -5,7 +5,7 @@
 
 int main() {
 
-	ARL_STATIC(armel, ARL_KB);
+	ARL_LOCAL(armel, ARL_KB);
 
 	int *i = arl_make(&armel, int);
 

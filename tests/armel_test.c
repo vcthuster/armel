@@ -1,10 +1,10 @@
 #include <Armel/armel_test.h>
 
-ARMEL_TEST(test_arl_static_alloc) {
+ARMEL_TEST(test_arl_local_alloc) {
 	Armel a;
 	ARL_ALIGNAS(ARL_ALIGN) void* buffer[1024];
 
-	arl_new_static(&a, buffer, 1024, ARL_ALIGN, 0);
+	arl_new_local(&a, buffer, 1024, ARL_ALIGN, ARL_NOFLAG);
 
 	void* ptr1 = arl_alloc(&a, 12);
 	void* ptr2 = arl_alloc(&a, 24);
@@ -13,6 +13,30 @@ ARMEL_TEST(test_arl_static_alloc) {
 	assert(ptr2 != NULL);
 	assert((uintptr_t)ptr1 % ARL_ALIGN == 0);
 	assert((uintptr_t)ptr2 % ARL_ALIGN == 0);
+}
+
+
+ARMEL_TEST(test_arl_new_local_valid) {
+    uint8_t buffer[128];
+    Armel arena;
+    arl_new_local(&arena, buffer, sizeof(buffer), 16, ARL_NOFLAG);
+
+    void* p = arl_alloc(&arena, 8);
+    assert(p != NULL);
+    assert(((uintptr_t)p % 16) == 0);
+}
+
+
+static void should_abort_on_bad_alignment_local() {
+    uint8_t buffer[128];
+    Armel a;
+    arl_new_local(&a, buffer, sizeof(buffer), 3, 0); // 3 is not a power of 2 → should abort
+}
+
+ARMEL_TEST(test_arl_new_local_bad_alignment_abort) {
+#if !SKIP_EXPECT_ABORT
+    expect_abort(should_abort_on_bad_alignment_local, "arl_new_local: bad alignment");
+#endif
 }
 
 
@@ -422,7 +446,9 @@ ARMEL_TEST(test_arl_alloc_softfail_null) {
 // ------------------------------------------------------------------------------------- //
 
 int main (void) {
-	RUN_TEST(test_arl_static_alloc);
+	RUN_TEST(test_arl_local_alloc);
+	RUN_TEST(test_arl_new_local_bad_alignment_abort);
+	RUN_TEST(test_arl_new_local_valid);
 	RUN_TEST(test_arl_alloc_int);
 	RUN_TEST(test_arl_alloc_zeroed);
 	RUN_TEST(test_arl_free);
