@@ -27,8 +27,8 @@
  *
  * The API is minimal by design and meant to be embedded directly into your project.
  *
- * Author: Vincent 
- * License: MIT
+ * Author: Vincent Huster
+ * License: Zlib
  */
 
 #ifndef ARMEL_H
