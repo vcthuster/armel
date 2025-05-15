@@ -19,6 +19,10 @@ TODO.md
 *.trace
 
 # Temporary test files
+tests/armel_test
+tests/armel_tests
+tests/*.dSYM
+tests/coverage-html
 dummy.txt
 temp.*
 *.tmp

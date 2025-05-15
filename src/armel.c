@@ -1,9 +1,14 @@
 #include <stdint.h>
 #include <stddef.h>
+
+#include <Armel/armel_sys.h>
 #include <Armel/armel.h>
 
 void arl_new_custom (Armel* armel, size_t size, size_t alignment, uint8_t flags) {
-	ARL_ASSERT_FATAL(alignment != 0, "Invalid alignment value");
+	if ((alignment == 0) || (alignment & (alignment - 1)) != 0) {
+		ARL_FATAL("Armel arena error : Alignment must be a power of 2 and non-zero.");
+		return;
+	}
 
 	size_t padded_size = arl_align_up(size, alignment);
     void* ptr = arl_sys_alloc(padded_size);

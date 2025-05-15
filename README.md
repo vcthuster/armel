@@ -134,17 +134,74 @@ ARL_STATIC(name, size);
 
 ## 🧪 Tests and Benchmarks
 
-This library includes internal unit tests.
+### ✅ Coverage Report
 
-Benchmark : TODO
+The Armel library is thoroughly tested with high coverage on all core components.
+All tests are located in [`tests/armel_test.c`](tests/armel_test.c) and are executed via:
+
+```bash
+make tests
+```
+
+Coverage is measured using Clang’s --coverage instrumentation and llvm-cov, with support for expect_abort() to test abort() paths.
+Each test run is followed by a coverage report generated with:
+
+```
+make coverage
+````
+
+> 📌 All benchmarks were compiled with `-O2` and run on an **Apple M4 (ARM64)**.  
+> Benchmarks were designed to reflect **real-world usage patterns** with allocation, zeroing, and reuse loops.
+
+Here is the current coverage summary:
+
+| Filename                      | Function Coverage     | Line Coverage         | Region Coverage        | Branch Coverage         |
+|------------------------------|------------------------|------------------------|-------------------------|--------------------------|
+| includes/Armel/armel.h       | 100.00% (10/10)        | 79.01% (64/81)         | 76.79% (43/56)          | 68.75% (11/16)           |
+| includes/Armel/armel_test.h  | 100.00% (1/1)          | 55.56% (10/18)         | 77.78% (14/18)          | 50.00% (4/8)             |
+| src/armel.c                  | 100.00% (3/3)          | 80.49% (33/41)         | 53.33% (16/30)          | 38.46% (5/13)            |
+| src/armel_sys.c              | 100.00% (2/2)          | 100.00% (10/10)        | 71.43% (15/21)          | 50.00% (2/4)             |
+| tests/armel_test.c           | 87.50% (28/32)         | 94.08% (302/321)       | 58.30% (418/717)        | 62.26% (99/159)          |
+| **Totals**                   | **91.67% (44/48)**     | **88.96% (419/471)**   | **60.10% (506/842)**    | **60.50% (121/200)**     |
+
+> 💡 Function and line coverage are near full on all core logic.
+> Branch and region coverage include deep safety checks, abort() handling, softfail paths, and alignment control logic.
+
+
+### 📊 Benchmarks
+
+A series of rigorous benchmarks were conducted to compare **Armel** with standard `malloc`/`free` under realistic conditions.
+
+Each test performs **10 million operations (`N = 10,000,000`)**, repeated **20 times**.  
+To ensure meaningful results:
+
+- `volatile` variables are used to prevent compiler optimizations.
+- Each test writes and reads actual memory contents.
+- Outliers are removed: the **fastest and slowest** measurements are discarded.
+- The final value is the **average time per operation**, computed over the remaining 18 runs.
+
+Benchmark logic is defined in [`arl_bench.h`](includes/Armel/arl_bench.h), and an example suite is available in [`bench.c`](bench.c).
+
+#### Results (Apple M4, compiled with `-O2`)
+
+| Operation               | Time (avg, ns/op) | Notes                                |
+|-------------------------|------------------:|----------------------------------------|
+| `malloc + memset`       |         143.33 ns | Standard allocation + zeroing         |
+| `arl_array (ZEROS)`     | **105.56 ns**     | Faster + zeroing via `ARL_ZEROS` flag |
+| `malloc array`          |         234.33 ns | Allocate, write, read, free           |
+| `arl_array`             | **193.06 ns**     | Linear alloc + fast reuse             |
+| `malloc single`         |           0.17 ns | Likely inlined or optimized by system |
+| `arl_make`              | **0.00 ns**       | Pure bump allocation                  |
+| `arl_new_custom`        |         282.56 ns | Includes `mmap` / `VirtualAlloc`      |
+| `arl_new`               |         283.67 ns | Default alignment, same backend call  |
 
 ---
 
-## ⚠️ Caveats
-
-- Not thread-safe
-- Memory is not individually freed (use `reset()` or `rewind_to()`)
-- Use responsibly in memory-constrained environments
+> ⚠️ **Caveats**
+> 
+> - Not thread-safe  
+> - Memory is not individually freed (use `arl_reset()` or `arl_rewind_to()`)  
+> - Use responsibly in memory-constrained environments
 
 ---
 
@@ -157,3 +214,7 @@ zlib – do whatever you want, just don't forget to give credit 😉
 ## ✍️ Author
 
 Made with ❤️ by Vincent Huster
+
+
+> 🙌 Contributions, improvements or feedback are welcome!  
+> Open an issue or submit a pull request.

@@ -1,21 +1,4 @@
-#include <stdint.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <Armel/armel.h>
-
-typedef void (*fn) (void);
-
-#define ARMEL_TEST(name) void name(void)
-
-#define RUN_TEST(test) 									\
-	do { 												\
-		printf("⚡️ Running %-30s ... ", #test); 		\
-		test(); 										\
-		printf("PASSED ✅\n"); 							\
-	} while (0)
-
+#include <Armel/armel_test.h>
 
 ARMEL_TEST(test_arl_static_alloc) {
 	Armel a;
@@ -50,6 +33,20 @@ ARMEL_TEST(test_arl_alloc_int) {
 	assert(i != j);
 
 	arl_free(&armel);
+}
+
+ARMEL_TEST(test_arl_alloc_zeroed) {
+    Armel arena;
+    arl_new(&arena, 64);
+
+    int* data = (int*)arl_alloc_zeroed(&arena, sizeof(int) * 4);
+    assert(data != NULL);
+
+    for (int i = 0; i < 4; i++) {
+        assert(data[i] == 0);
+    }
+
+    arl_free(&arena);
 }
 
 ARMEL_TEST(test_arl_free) {
@@ -329,6 +326,28 @@ ARMEL_TEST (test_arl_zeros) {
     arl_free(&arena);
 }
 
+ARMEL_TEST(test_arl_size_macro) {
+    // Exemple : on veut 3 int alignés sur 16
+    size_t expected = arl_align_up(sizeof(int), 16) * 3;
+    size_t actual = arl_size(int, 3, 16);
+
+    assert(actual == expected);
+    assert(actual % 16 == 0);
+}
+
+ARMEL_TEST(test_arl_size_struct) {
+    typedef struct {
+        char c;
+        double d;
+    } MyStruct;
+
+    size_t align = 16;
+    size_t s = arl_size(MyStruct, 10, align);
+
+    assert(s % align == 0); // Résultat bien aligné
+    assert(s >= sizeof(MyStruct) * 10); // Padding éventuel accepté
+}
+
 ARMEL_TEST(test_arl_print_info) {
     Armel arena;
     arl_new(&arena, 64);
@@ -341,11 +360,8 @@ ARMEL_TEST(test_arl_print_info) {
     arl_free(&arena);
 }
 
-// ⚠️ This test is designed to deliberately fail
-// Uncomment to verify ARL_CHECK behavior (will abort the program)
-/*
-ARMEL_TEST(test_arl_check_fail) {
-    Armel arena;
+void test_arl_check_fail (void) {
+	Armel arena;
     arena.base = NULL;
 
     // This should trigger ARL_CHECK and abort due to null base
@@ -355,15 +371,60 @@ ARMEL_TEST(test_arl_check_fail) {
     // If we reach this line, ARL_CHECK did not abort as expected
     assert(0 && "ARL_CHECK should have aborted the program");
 }
-*/
+
+ARMEL_TEST(test_arl_check_fail_abort) {
+    expect_abort(test_arl_check_fail, "test_arl_check_fail");
+}
+
+static void should_abort_invalid_alignment() {
+    Armel armel;
+    arl_new_custom(&armel, 1024, 3, ARL_NOFLAG);  // 3 is not a power of 2 → should abort
+}
+
+ARMEL_TEST(test_invalid_alignment_abort) {
+    expect_abort(should_abort_invalid_alignment, "arl_new_custom: invalid alignment");
+}
+
+static void should_abort_zero_alignment() {
+    Armel armel;
+    arl_new_custom(&armel, 1024, 0, ARL_NOFLAG);  // alignment == 0 → should abort
+}
+
+ARMEL_TEST(test_zero_alignment_abort) {
+    expect_abort(should_abort_zero_alignment, "arl_new_custom: zero alignment");
+}
+
+static void should_abort_on_overflow() {
+	Armel a;
+	arl_new_custom(&a, 8, ARL_ALIGN, ARL_NOFLAG); // very small arena
+
+	(void)arl_alloc(&a, 64);  // request too big -> should abort
+}
+
+ARMEL_TEST(test_arl_alloc_overflow_abort) {
+	expect_abort(should_abort_on_overflow, "arl_alloc: overflow without SOFTFAIL");
+}
+
+ARMEL_TEST(test_arl_alloc_softfail_null) {
+    Armel arena;
+    arl_new_custom(&arena, 16, ARL_ALIGN, ARL_SOFTFAIL);  // tout petit + SOFTFAIL
+
+    void *p1 = arl_alloc(&arena, 16); // OK
+    void *p2 = arl_alloc(&arena, 16); // dépasse → doit retourner NULL, pas crash
+
+    assert(p1 != NULL);
+    assert(p2 == NULL);
+
+    arl_free(&arena);
+}
 
 
 // ------------------------------------------------------------------------------------- //
-// Pour lancer les tests : cmd + maj + P -> run tasks -> exec armel tests
 
 int main (void) {
 	RUN_TEST(test_arl_static_alloc);
 	RUN_TEST(test_arl_alloc_int);
+	RUN_TEST(test_arl_alloc_zeroed);
 	RUN_TEST(test_arl_free);
 	RUN_TEST(test_arl_cursor);
 	RUN_TEST(test_arl_zero_size);
@@ -380,6 +441,14 @@ int main (void) {
 	RUN_TEST(test_arl_rewind_and_reuse);
 	RUN_TEST(test_arl_softfail);
 	RUN_TEST(test_arl_zeros);
+	RUN_TEST(test_arl_size_macro);
+	RUN_TEST(test_arl_size_struct);
+	RUN_TEST(test_arl_check_fail_abort);
+	RUN_TEST(test_invalid_alignment_abort);
+	RUN_TEST(test_zero_alignment_abort);
+	RUN_TEST(test_arl_alloc_overflow_abort);
+	RUN_TEST(test_arl_alloc_softfail_null);
+
 	RUN_TEST(test_arl_print_info);
 	// 
 

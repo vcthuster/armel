@@ -38,9 +38,8 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <string.h>
-#include <assert.h>
+#include <Armel/armel_sys.h>
 
 /**
  * @def ARL_KB
@@ -288,7 +287,7 @@ static inline void arl_new_static(Armel *armel, void *buffer, size_t size, size_
  *     int* values = arl_array(&temp_arena, int, 128);
  */
 #define ARL_STATIC(name, size) 				     		                    \
-    ARL_ALIGNAS(ARL_ALIGN) static uint8_t name##_buffer[size]; 				\
+    ARL_ALIGNAS(ARL_ALIGN) uint8_t name##_buffer[size]; 				\
 	Armel name; 									                    \
 	arl_new_static(&name, name##_buffer, size, ARL_ALIGN, ARL_NOFLAG)
 
@@ -309,30 +308,6 @@ static inline size_t arl_align_up(size_t size, size_t align) {
     size_t a = align - 1;
     return (size + a) & ~a;
 }
-
-/**
- * @brief Allocates a memory region of the given size using system-specific calls.
- *
- * On UNIX: uses mmap. 
- * On Windows: uses VirtualAlloc.
- * This function is intended for internal use by arl_new().
- *
- * @param size Number of bytes to allocate (must already be aligned)
- * @return Pointer to the allocated memory (never NULL or MAP_FAILED — use ARL_ASSERT_FATAL)
- */
-void* arl_sys_alloc (size_t size);
-
-/**
- * @brief Frees a memory region allocated by arl_sys_alloc.
- *
- * On UNIX: uses munmap. 
- * On Windows: uses VirtualFree.
- * This function is intended for internal use by arl_free().
- *
- * @param ptr  Pointer to the memory block to free
- * @param size Original size of the memory block
- */
-void arl_sys_free (void *ptr, size_t size);
 
 /**
  * @brief Create a new Arena with size bytes capacity.
@@ -403,6 +378,11 @@ static inline void arl_reset (Armel *armel) {
  * @return A pointer to the allocated memory
  */
 static inline void* arl_alloc (Armel *armel, size_t size) {
+	if (armel->base == NULL) {
+		if (armel->flags & ARL_SOFTFAIL) return NULL;
+		ARL_FATAL("Armel arena is not initialized or has been freed");
+	}
+
 	uintptr_t cursor    = (uintptr_t)armel->cursor;
 	uintptr_t start     = (cursor + armel->mask) & ~armel->mask;
 	uintptr_t stop      = start + size;
@@ -414,8 +394,12 @@ static inline void* arl_alloc (Armel *armel, size_t size) {
 			return NULL;
 		}
 
-		fprintf(stderr, "Armel arena error: out of memory. requesting %zu, remaining %zu\n", 
-			size, (uintptr_t)armel->end - start);
+		fprintf(stderr, "Armel arena error: out of memory.\n"
+        				"  Requested : %zu bytes\n"
+        				"  Remaining : %zu bytes\n"
+        				"  Cursor    : %p\n"
+        				"  End       : %p\n",
+        			size, (uintptr_t)armel->end - start, armel->cursor, armel->end);
 		abort();
 	}
 
